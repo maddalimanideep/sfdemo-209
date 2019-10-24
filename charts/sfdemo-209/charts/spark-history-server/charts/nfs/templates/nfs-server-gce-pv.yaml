@@ -1,0 +1,18 @@
+{{- if .Values.enableExampleNFS }}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ include "nfs.fullname" . }}
+  labels:
+    snappyflow/compname: sfdemo
+    snappyflow/appname: sfd-stage
+    app.kubernetes.io/name: {{ include "nfs.name" . }}
+    helm.sh/chart: {{ include "nfs.chart" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+spec:
+  accessModes: [ "ReadWriteOnce" ]
+  resources:
+    requests:
+      storage: {{ .Values.gceStorage }}
+{{- end }}

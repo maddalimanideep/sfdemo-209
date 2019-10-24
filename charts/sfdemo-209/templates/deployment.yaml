@@ -1,0 +1,82 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "sf.fullname" . }}
+  labels:
+    snappyflow/compname: sfdemo
+    snappyflow/appname: sfd-stage
+{{ include "sf.labels" . | indent 4 }}
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ include "sf.name" . }}
+      app.kubernetes.io/instance: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        snappyflow/compname: sfdemo
+        snappyflow/appname: sfd-stage
+        app.kubernetes.io/name: {{ include "sf.name" . }}
+        app.kubernetes.io/instance: {{ .Release.Name }}
+    spec:
+    {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+      containers:
+        - name: {{ .Chart.Name }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          env:
+          - name: ELASTIC_HOST
+            {{- if and (eq .Values.elasticsearch.enable false) .Values.elasticsearch.host }}
+            value: {{ .Values.elasticsearch.host | quote}}
+            {{- else }}
+            value: {{ template "sf.elasticsearch.fullname" . }}-client
+            {{- end }}
+          - name: ELASTIC_PORT
+            {{- if and (eq .Values.elasticsearch.enable false) .Values.elasticsearch.port  }}
+            value: {{ .Values.elasticsearch.port | quote}}
+            {{- else }}
+            value: "9200" 
+            {{- end }}
+          - name: ELASTIC_INDEX
+            {{- if and (eq .Values.elasticsearch.enable false) .Values.elasticsearch.index  }}
+            value: {{ .Values.elasticsearch.index | quote}}
+            {{- else }}
+            value: "metric-apm_write" 
+            {{- end }}
+          - name: REDIS_HOST
+            {{- if and (eq .Values.redis.enable false) .Values.redis.host  }}
+            value: {{ .Values.redis.host | quote}}
+            {{- else }}
+            value: {{ template "sf.redis.fullname" . }}-master
+            {{- end }}
+          - name: REDIS_PORT
+            {{- if and (eq .Values.redis.enable false) .Values.redis.port  }}
+            value: {{ .Values.redis.port | quote}}
+            {{- else }}
+            value: {{ .Values.redis.redisPort | quote }}
+            {{- end }}
+          - name: HISTORY_SERVER_HOST
+            value: {{ template "sf.spark-history-server.fullname" . }}
+          - name: HISTORY_SERVER_PORT
+            value: {{ index .Values "spark-history-server" "service" "port" | quote}}
+          - name: USE_REST_API
+            value: "1"
+          - name: USE_REDIS
+            value: "true" 
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+    {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+    {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}

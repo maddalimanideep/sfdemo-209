@@ -1,0 +1,78 @@
+# Default values for sf.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+global:
+  storageClass: "nfs-dp"
+
+replicaCount: 1
+
+image:
+  repository: docker.io/sushantpande/sf
+  tag: inuse
+  pullPolicy: Always
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+ingress:
+  enabled: false
+  annotations: {}
+    # kubernetes.io/ingress.class: nginx
+    # kubernetes.io/tls-acme: "true"
+  hosts:
+    - host: chart-example.local
+      paths: []
+
+  tls: []
+  #  - secretName: chart-example-tls
+  #    hosts:
+  #      - chart-example.local
+
+
+#Manage Redis server
+#If enable is true REdis server will be get deployed as dependent chart, in that
+#case there no need to set host and port. If enable is false deployment assumes 
+#that there is an existing Redis server whose host and port values will be set 
+#here
+redis:
+  enable: true
+  host: null
+  port: null
+
+#Manage Elasticsearch
+#If enable is true Elasticsearch server will be get deployed as dependent chart
+#In that case there no need to set host and port. If enable is false deployment
+#assumes that there is an existing Elasticsearch server whose host and port
+#values will be set 
+#here
+elasticsearch:
+  enable: false
+  host: "ec2-52-43-75-173.us-west-2.compute.amazonaws.com"
+  port: "9200"
+  index: "metric-default_write"
+
+spark-history-server:
+  pvc:
+    enablePVC: true
+    existingClaimName: history-server-claim
+    eventsDir: "/"
+
+resources: {}
+  # We usually recommend not to specify default resources and to leave this as a conscious
+  # choice for the user. This also increases chances charts run on environments with little
+  # resources, such as Minikube. If you do want to specify resources, uncomment the following
+  # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+  # limits:
+  #   cpu: 100m
+  #   memory: 128Mi
+  # requests:
+  #   cpu: 100m
+  #   memory: 128Mi
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
